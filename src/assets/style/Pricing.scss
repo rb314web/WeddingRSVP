@@ -1,0 +1,138 @@
+
+// Pricing.scss
+.pricing {
+  padding: 6rem 0;
+  background: linear-gradient(160deg, #fff5fc 0%, #f8f9ff 100%);
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  &__card {
+    position: relative;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 8px 32px rgba(126, 107, 255, 0.05);
+    transition: all 0.3s ease;
+
+    &.premium {
+      transform: translateY(-10px);
+      background: linear-gradient(45deg, #7e6bff, #ad6bff);
+      color: white;
+      
+      .pricing__price {
+        color: rgba(255, 255, 255, 0.9);
+      }
+      
+      .pricing__cta {
+        background: white;
+        color: #7e6bff;
+      }
+    }
+
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 40px rgba(126, 107, 255, 0.1);
+    }
+  }
+
+  &__card-inner {
+    position: relative;
+    z-index: 1;
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  &__price {
+    font-size: 2rem;
+    color: #7e6bff;
+    margin-bottom: 2rem;
+  }
+
+  &__features {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 2rem;
+  }
+
+  &__feature {
+    padding: 0.5rem 0;
+    font-size: 1rem;
+  }
+
+  &__cta {
+    display: inline-block;
+    padding: 1rem 2rem;
+    background: linear-gradient(45deg, #7e6bff, #ad6bff);
+    color: white;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(126, 107, 255, 0.3);
+    }
+  }
+
+  &__badge {
+    position: absolute;
+    top: -15px;
+    right: -15px;
+    background: #ff6b6b;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+  }
+}
+
+// Wspólne animacje
+.animate-slide-in {
+  opacity: 0;
+  transform: translateY(30px);
+  animation: slideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-slide-up {
+  opacity: 0;
+  transform: translateY(30px);
+  animation: slideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes slideUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .faq, .pricing {
+    padding: 4rem 0;
+    
+    &__item, &__card {
+      margin-bottom: 1.5rem;
+    }
+  }
+  
+  .faq__question {
+    font-size: 1rem;
+  }
+  
+  .pricing__price {
+    font-size: 1.5rem;
+  }
+}

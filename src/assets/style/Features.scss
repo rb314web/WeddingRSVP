@@ -1,0 +1,81 @@
+.features {
+  position: relative;
+  padding: 6rem 0;
+  background: linear-gradient(160deg, #f8f9ff 0%, #fff5fc 100%);
+  overflow: hidden;
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+  }
+}
+
+.feature-card {
+  position: relative;
+  border-radius: 20px;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(126, 107, 255, 0.05);
+  transform: translateY(30px);
+  opacity: 0;
+  animation: slideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  transition: all 0.3s ease;
+
+  &__inner {
+    padding: 2rem;
+    border-radius: 15px;
+    background: linear-gradient(145deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.95) 100%);
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    color: #2d2d2d;
+    margin-bottom: 1rem;
+    font-weight: 700;
+  }
+
+  &__text {
+    color: #4a4a4a;
+    line-height: 1.6;
+    font-size: 1rem;
+  }
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(126, 107, 255, 0.15);
+    
+    .feature-card__inner {
+      background: linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,1) 100%);
+    }
+  }
+}
+
+@keyframes slideUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .features {
+    padding: 4rem 0;
+    
+    &__grid {
+      gap: 1.5rem;
+    }
+  }
+  
+  .feature-card {
+    &__title {
+      font-size: 1.3rem;
+    }
+    
+    &__text {
+      font-size: 0.9rem;
+    }
+  }
+}
