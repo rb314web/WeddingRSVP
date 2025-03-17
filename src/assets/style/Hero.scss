@@ -1,135 +1,113 @@
+@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@400;700&display=swap');
+
 .hero {
   position: relative;
-  min-height: 100vh;
+  background: url('./images/wedding-bg.jpg') no-repeat center/cover;
+  color: #fff;
+  text-align: center;
+  height: 100vh;
   display: flex;
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  overflow: hidden;
-  padding: 2rem 0;
 
-  &__background {
+  &__overlay {
     position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    z-index: 0;
-
-    &::before {
-      content: '';
-      position: absolute;
-      width: 150%;
-      height: 150%;
-      background: linear-gradient(45deg, #ff7eb3 0%, #7ec8ff 50%, #ad6bff 100%);
-      animation: rotate 20s linear infinite;
-    }
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(5px);
   }
 
-  &__blur {
+  &__nav {
     position: absolute;
+    top: 0;
     width: 100%;
-    height: 100%;
-    backdrop-filter: blur(80px);
-    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 50px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+
+    &__logo {
+      font-family: 'Great Vibes', cursive;
+      font-size: 2rem;
+      color: #f8d49d;
+    }
+
+    &__menu {
+      list-style: none;
+      display: flex;
+      gap: 20px;
+
+      li a {
+        color: #fff;
+        text-decoration: none;
+        font-size: 1.1rem;
+        transition: color 0.3s ease-in-out;
+
+        &:hover {
+          color: #f8d49d;
+        }
+      }
+    }
   }
 
   &__content {
     position: relative;
     z-index: 2;
-    text-align: center;
+  }
+
+  &__glass {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 40px;
+    border-radius: 20px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    display: inline-block;
   }
 
   &__title {
+    font-family: 'Great Vibes', cursive;
     font-size: 3.5rem;
-    line-height: 1.1;
-    margin-bottom: 1.5rem;
-    color: #2d2d2d;
-    font-weight: 700;
-    
-    span {
-      display: block;
-      opacity: 0;
-      transform: translateY(30px);
-      animation: slideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-      
-      &:first-child {
-        animation-delay: 0.2s;
-      }
-      &:last-child {
-        animation-delay: 0.4s;
-      }
-    }
+    color: #f8d49d;
+    text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.3);
+  }
+
+  &__separator {
+    width: 80px;
+    height: 3px;
+    background: #f8d49d;
+    margin: 10px auto;
   }
 
   &__subtitle {
     font-size: 1.5rem;
-    color: #4a4a4a;
-    margin-bottom: 2.5rem;
-    opacity: 0;
-    transform: translateY(20px);
-    animation: fadeUp 0.6s 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    font-family: 'Playfair Display', serif;
   }
 
   &__cta {
-    display: inline-flex;
-    align-items: center;
-    padding: 1.2rem 2.5rem;
-    background: #7e6bff;
-    color: white;
-    border-radius: 50px;
-    font-weight: 600;
+    display: inline-block;
+    margin-top: 20px;
+    padding: 12px 24px;
+    font-size: 1.2rem;
+    background: linear-gradient(45deg, #f8d49d, #e0b577);
+    color: #3b2c20;
+    border-radius: 30px;
     text-decoration: none;
-    transition: all 0.3s ease;
-    opacity: 0;
-    transform: scale(0.8);
-    animation: popIn 0.6s 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    transition: all 0.3s ease-in-out;
 
     &:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 10px 20px rgba(126, 107, 255, 0.3);
-      
-      .hero__cta-arrow {
-        transform: translateX(4px);
-      }
+      background: #e0b577;
+      transform: scale(1.05);
+    }
+
+    &-icon {
+      margin-left: 8px;
     }
   }
-
-  &__cta-arrow {
-    margin-left: 0.8rem;
-    transition: transform 0.3s ease;
-  }
 }
-
-@keyframes rotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-@keyframes slideUp {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeUp {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes popIn {
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@media (max-width: 768px) {
-  .hero {
-    &__title {
-      font-size: 2.5rem;
-    }
-    
-    &__subtitle {
-      font-size: 1.2rem;
-    }
-  }}

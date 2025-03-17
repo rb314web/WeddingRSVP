@@ -14,127 +14,101 @@ const Login: React.FC = () => {
 
   useEffect(() => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const isEmailValid = emailRegex.test(email.trim());
-    const isPasswordValid = password.trim().length >= 8;
-    
-    setIsFormValid(isEmailValid && isPasswordValid);
+    setIsFormValid(emailRegex.test(email.trim()) && password.trim().length >= 8);
   }, [email, password]);
-
-  const validateForm = (): string | null => {
-    const trimmedEmail = email.trim();
-    const trimmedPassword = password.trim();
-
-    if (!trimmedEmail || !trimmedPassword) {
-      return 'Wszystkie pola są wymagane';
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-      return 'Nieprawidłowy format adresu email';
-    }
-
-    if (trimmedPassword.length < 8) {
-      return 'Hasło musi mieć minimum 8 znaków';
-    }
-
-    return null;
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isFormValid) return;
+
     setIsLoading(true);
     setError(null);
-
-    const validationError = validateForm();
-    if (validationError) {
-      setError(validationError);
-      setIsLoading(false);
-      return;
-    }
 
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          email: email.trim(),
-          password: password.trim()
-        }),
+        body: JSON.stringify({ email: email.trim(), password: password.trim() }),
       });
 
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Błąd logowania');
-      }
-
+      
+      if (!response.ok) throw new Error(data.error || 'Login failed');
+      
       login(data.user);
       navigate('/dashboard');
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('Wystąpił nieznany błąd');
-      }
+      setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="login__card">
-      <h2 className="login__title">Logowanie</h2>
-      
-      {error && (
-        <div className="login__error">
-          {error}
+    <div className="login-layout">
+      <div className="login-image-column">
+        <div className="image-overlay">
+          <h2 className="brand-heading">RSVP</h2>
+          <p className="event-date">AUG 20, 2016</p>
         </div>
-      )}
+      </div>
 
-      <form onSubmit={handleSubmit}>
-        <div className="input-group">
-          <input
-            type="email"
-            className="input-field"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              setError(null);
-            }}
-            placeholder=" "
-          />
-          <label className="input-label">Email</label>
+      <div className="login-form-column">
+        <div className="login-container">
+          <div className="login-header">
+            <h1>WELCOME BACK</h1>
+            <div className="decorative-line" />
+          </div>
+
+          <form onSubmit={handleSubmit} className="login-form">
+            <div className="input-group">
+              <input
+                type="email"
+                className="input-field"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setError(null);
+                }}
+                placeholder=" "
+              />
+              <label className="input-label">Email</label>
+            </div>
+
+            <div className="input-group">
+              <input
+                type="password"
+                className="input-field"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError(null);
+                }}
+                placeholder=" "
+              />
+              <label className="input-label">Password</label>
+            </div>
+
+            {error && <div className="error-message">{error}</div>}
+
+            <button
+              type="submit"
+              className="login__button"
+              disabled={isLoading || !isFormValid}
+            >
+              {isLoading ? (
+                <div className="loader" />
+              ) : (
+                'Sign In'
+              )}
+            </button>
+          </form>
+
+          <div className="auth-link">
+            Don't have an account? <a href="/register">Register now</a>
+          </div>
         </div>
-
-        <div className="input-group">
-          <input
-            type="password"
-            className="input-field"
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-              setError(null);
-            }}
-            placeholder=" "
-          />
-          <label className="input-label">Hasło</label>
-        </div>
-
-        <button
-          type="submit"
-          className="login__button"
-          disabled={isLoading || !isFormValid}
-        >
-          {isLoading ? (
-            <div className="loader" />
-          ) : (
-            'Zaloguj się'
-          )}
-        </button>
-      </form>
-
-      <div className="login__link">
-        Nie masz konta? <a href="/register">Zarejestruj się</a>
       </div>
     </div>
   );

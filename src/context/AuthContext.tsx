@@ -14,6 +14,7 @@ interface AuthContextType {
   login: (user: User) => void;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
+  refreshAccessToken: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -33,40 +34,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(response.data.user);
     } catch (error: any) {
       if (error.response?.status === 401) {
-        await forceLogout();
+        await refreshAccessToken();
       }
     }
   };
 
-  const forceLogout = async () => {
-    setUser(null);
-    localStorage.removeItem('isLoggedIn');
-  };
-
-  const login = (userData: User) => {
-    setUser(userData);
-    localStorage.setItem('isLoggedIn', 'true');
+  const refreshAccessToken = async () => {
+    try {
+      await axios.post('/api/refresh-token');
+      await checkAuth();
+    } catch (error) {
+      setUser(null);
+    }
   };
 
   const logout = async () => {
     try {
       await axios.post('/api/logout');
-    } finally {
-      await forceLogout();
+      setUser(null);
+    } catch (error) {
+      console.error('Błąd wylogowania', error);
     }
   };
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      const isLoggedIn = localStorage.getItem('isLoggedIn');
-      if (isLoggedIn) await checkAuth();
-      setIsLoading(false);
-    };
-    initializeAuth();
+    checkAuth().finally(() => setIsLoading(false));
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, checkAuth, isLoading }}>
+    <AuthContext.Provider value={{ user, login: setUser, logout, checkAuth, refreshAccessToken, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
