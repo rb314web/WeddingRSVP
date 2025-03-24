@@ -1,117 +1,51 @@
-import React, { useState, useEffect } from 'react';
+import { useAuth0 } from '@auth0/auth0-react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import '../assets/style/Login.scss';
+import '../assets/style/Login.scss'
 
-const Login: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isFormValid, setIsFormValid] = useState(false);
+const LoginPage = () => {
+  const { loginWithRedirect, isAuthenticated, isLoading } = useAuth0();
   const navigate = useNavigate();
-  const { login } = useAuth();
 
   useEffect(() => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    setIsFormValid(emailRegex.test(email.trim()) && password.trim().length >= 8);
-  }, [email, password]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isFormValid) return;
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email: email.trim(), password: password.trim() }),
-      });
-
-      const data = await response.json();
-      
-      if (!response.ok) throw new Error(data.error || 'Login failed');
-      
-      login(data.user);
+    if (isAuthenticated && !isLoading) {
       navigate('/dashboard');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [isAuthenticated, isLoading, navigate]);
 
   return (
-    <div className="login-layout">
-      <div className="login-image-column">
-        <div className="image-overlay">
-          <h2 className="brand-heading">RSVP</h2>
-          <p className="event-date">AUG 20, 2016</p>
-        </div>
-      </div>
+      <div className="login-page">
+        <div className="login-page__card">
+          <h2>Witaj w Wedding Planner</h2>
+          <p>Zaloguj się aby kontynuować</p>
 
-      <div className="login-form-column">
-        <div className="login-container">
-          <div className="login-header">
-            <h1>WELCOME BACK</h1>
-            <div className="decorative-line" />
+          <button
+              className="login-page__button"
+              onClick={() => loginWithRedirect()}
+          >
+            Zaloguj przez Auth0
+          </button>
+
+          <div className="login-page__divider">
+            <span>lub</span>
           </div>
 
-          <form onSubmit={handleSubmit} className="login-form">
-            <div className="input-group">
-              <input
-                type="email"
-                className="input-field"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  setError(null);
-                }}
-                placeholder=" "
-              />
-              <label className="input-label">Email</label>
-            </div>
-
-            <div className="input-group">
-              <input
-                type="password"
-                className="input-field"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setError(null);
-                }}
-                placeholder=" "
-              />
-              <label className="input-label">Password</label>
-            </div>
-
-            {error && <div className="error-message">{error}</div>}
-
+          <div className="login-page__social-container">
             <button
-              type="submit"
-              className="login__button"
-              disabled={isLoading || !isFormValid}
+                className="login-page__social-button"
+                onClick={() => loginWithRedirect({
+                  authorizationParams: {
+                    connection: 'google-oauth2',
+                  }
+                })}
             >
-              {isLoading ? (
-                <div className="loader" />
-              ) : (
-                'Sign In'
-              )}
+              <span className="login-page__google-icon" />
+              Kontynuuj przez Google
             </button>
-          </form>
-
-          <div className="auth-link">
-            Don't have an account? <a href="/register">Register now</a>
           </div>
         </div>
       </div>
-    </div>
   );
 };
 
-export default Login;
+export default LoginPage;

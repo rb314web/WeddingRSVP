@@ -1,226 +1,176 @@
 import React, { FC, useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useAuth0 } from '@auth0/auth0-react';
 import '../assets/style/Dashboard.scss';
 
 interface Guest {
   id: string;
   name: string;
   email: string;
-  status: 'confirmed' | 'declined' | 'pending';
+  confirmed: boolean;
   plusOne?: string;
 }
 
 const Dashboard: FC = () => {
+  const { logout, user } = useAuth0();
   const [guests, setGuests] = useState<Guest[]>([]);
-  const [newGuest, setNewGuest] = useState({
+  const [editGuest, setEditGuest] = useState<Guest | null>(null);
+  const [newGuest, setNewGuest] = useState<Omit<Guest, 'id'>>({
     name: '',
     email: '',
+    confirmed: false,
     plusOne: ''
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [serverError, setServerError] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchGuests = async () => {
-      try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/guests`, {
-          credentials: 'include'
-        });
-        
-        if (!response.ok) {
-          throw new Error('Błąd ładowania danych');
-        }
-        
-        const data: Guest[] = await response.json();
-        setGuests(data);
-      } catch (error) {
-        if (error instanceof Error) {
-          setServerError(error.message);
-        } else {
-          setServerError('Wystąpił nieoczekiwany błąd');
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchGuests();
-  }, []);
-
-  const handleAddGuest = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  // Walidacja formularza
+  const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    if (!newGuest.name.trim()) {
-      newErrors.name = 'Imię jest wymagane';
-    }
+    if (!newGuest.name.trim()) newErrors.name = 'Imię jest wymagane';
     if (!newGuest.email.match(/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/)) {
       newErrors.email = 'Nieprawidłowy format email';
     }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/guests`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newGuest)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Błąd dodawania gościa');
-      }
-
-      const createdGuest: Guest = await response.json();
-      setGuests([...guests, createdGuest]);
-      setNewGuest({ name: '', email: '', plusOne: '' });
-      setErrors({});
-    } catch (error) {
-      if (error instanceof Error) {
-        setServerError(error.message);
-      } else {
-        setServerError('Wystąpił nieznany błąd podczas dodawania gościa');
-      }
-    }
+    return newErrors;
   };
 
-  const handleStatusChange = async (guestId: string, newStatus: 'confirmed' | 'declined') => {
-    try {
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/guests/${guestId}/status`,
-        {
-          method: 'PATCH',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: newStatus })
-        }
-      );
+  // Obsługa dodawania/edycji
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) return setErrors(errors);
 
-      if (!response.ok) {
-        throw new Error('Błąd aktualizacji statusu');
-      }
-
-      setGuests(guests.map(guest => 
-        guest.id === guestId ? { ...guest, status: newStatus } : guest
+    if (editGuest) {
+      // Edycja istniejącego gościa
+      setGuests(guests.map(g =>
+          g.id === editGuest.id ? { ...newGuest, id: editGuest.id } : g
       ));
-    } catch (error) {
-      if (error instanceof Error) {
-        setServerError(error.message);
-      } else {
-        setServerError('Wystąpił nieznany błąd podczas aktualizacji statusu');
-      }
+    } else {
+      // Dodawanie nowego gościa
+      setGuests([...guests, { ...newGuest, id: Date.now().toString() }]);
     }
+
+    setNewGuest({ name: '', email: '', confirmed: false, plusOne: '' });
+    setEditGuest(null);
+    setErrors({});
   };
 
-  const handleDeleteGuest = async (guestId: string) => {
-    try {
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/guests/${guestId}`,
-        { method: 'DELETE', credentials: 'include' }
-      );
+  // Przygotowanie formularza do edycji
+  const handleEdit = (guest: Guest) => {
+    setEditGuest(guest);
+    setNewGuest({
+      name: guest.name,
+      email: guest.email,
+      confirmed: guest.confirmed,
+      plusOne: guest.plusOne || ''
+    });
+  };
 
-      if (!response.ok) {
-        throw new Error('Błąd usuwania gościa');
-      }
-
-      setGuests(guests.filter(guest => guest.id !== guestId));
-    } catch (error) {
-      if (error instanceof Error) {
-        setServerError(error.message);
-      } else {
-        setServerError('Wystąpił nieznany błąd podczas usuwania gościa');
-      }
-    }
+  // Usuwanie gościa
+  const handleDelete = (id: string) => {
+    setGuests(guests.filter(g => g.id !== id));
   };
 
   return (
-    <div className="dashboard">
-      <div className="dashboard-card">
-        <h2>Zarządzanie Gośćmi</h2>
-        
-        {serverError && <div className="error-message">{serverError}</div>}
-
-        <form onSubmit={handleAddGuest} className="guest-form">
-          <div className="form-group">
-            <input
-              type="text"
-              placeholder="Imię i nazwisko"
-              value={newGuest.name}
-              onChange={e => setNewGuest({ ...newGuest, name: e.target.value })}
-            />
-            {errors.name && <span className="error">{errors.name}</span>}
+      <div className="dashboard">
+        <div className="dashboard-card">
+          <div className="dashboard-header">
+            <div className="user-info">
+              <h1>Lista Gości</h1>
+              <p>Zalogowany jako: {user?.email}</p>
+            </div>
+            <button onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}>
+              Wyloguj
+            </button>
           </div>
 
-          <div className="form-group">
-            <input
-              type="email"
-              placeholder="Email"
-              value={newGuest.email}
-              onChange={e => setNewGuest({ ...newGuest, email: e.target.value })}
-            />
-            {errors.email && <span className="error">{errors.email}</span>}
-          </div>
+          <form onSubmit={handleSubmit}>
+            <div className="form-section">
+              <h2>{editGuest ? 'Edytuj Gościa' : 'Dodaj Nowego Gościa'}</h2>
 
-          <div className="form-group">
-            <input
-              type="text"
-              placeholder="Osoba towarzysząca (opcjonalnie)"
-              value={newGuest.plusOne}
-              onChange={e => setNewGuest({ ...newGuest, plusOne: e.target.value })}
-            />
-          </div>
+              <div className="input-group">
+                <label>Imię i Nazwisko*</label>
+                <input
+                    value={newGuest.name}
+                    onChange={e => setNewGuest({...newGuest, name: e.target.value})}
+                />
+                {errors.name && <span className="error">{errors.name}</span>}
+              </div>
 
-          <button type="submit" className="add-button">
-            Dodaj Gościa
-          </button>
-        </form>
+              <div className="input-group">
+                <label>Email*</label>
+                <input
+                    type="email"
+                    value={newGuest.email}
+                    onChange={e => setNewGuest({...newGuest, email: e.target.value})}
+                />
+                {errors.email && <span className="error">{errors.email}</span>}
+              </div>
 
-        <div className="guest-list">
-          {isLoading ? (
-            <div className="loading">Ładowanie...</div>
-          ) : guests.length === 0 ? (
-            <div className="empty">Brak dodanych gości</div>
-          ) : (
-            guests.map(guest => (
-              <div key={guest.id} className={`guest-card ${guest.status}`}>
-                <div className="guest-info">
-                  <h3>{guest.name}</h3>
-                  <p>{guest.email}</p>
-                  {guest.plusOne && <p>+1: {guest.plusOne}</p>}
-                </div>
-
-                <div className="guest-actions">
-                  <select
-                    value={guest.status}
-                    onChange={e => handleStatusChange(
-                      guest.id, 
-                      e.target.value as 'confirmed' | 'declined'
-                    )}
-                  >
-                    <option value="confirmed">Potwierdzony</option>
-                    <option value="pending">Oczekujący</option>
-                    <option value="declined">Odwołany</option>
-                  </select>
-                  <button
-                    onClick={() => handleDeleteGuest(guest.id)}
-                    className="delete-button"
-                  >
-                    Usuń
-                  </button>
+              <div className="input-group">
+                <label>Potwierdzenie</label>
+                <div className="radio-group">
+                  <label>
+                    <input
+                        type="radio"
+                        checked={newGuest.confirmed}
+                        onChange={() => setNewGuest({...newGuest, confirmed: true})}
+                    />
+                    Tak
+                  </label>
+                  <label>
+                    <input
+                        type="radio"
+                        checked={!newGuest.confirmed}
+                        onChange={() => setNewGuest({...newGuest, confirmed: false})}
+                    />
+                    Nie
+                  </label>
                 </div>
               </div>
-            ))
-          )}
+
+              <div className="input-group">
+                <label>Osoba Towarzysząca</label>
+                <input
+                    value={newGuest.plusOne}
+                    onChange={e => setNewGuest({...newGuest, plusOne: e.target.value})}
+                />
+              </div>
+
+              <button type="submit">
+                {editGuest ? 'Zapisz Zmiany' : 'Dodaj Gościa'}
+              </button>
+              {editGuest && (
+                  <button type="button" onClick={() => setEditGuest(null)}>
+                    Anuluj
+                  </button>
+              )}
+            </div>
+          </form>
+
+          <div className="guest-list">
+            <h3>Lista Gości ({guests.length})</h3>
+
+            {guests.map(guest => (
+                <div key={guest.id} className={`guest-item ${guest.confirmed ? 'confirmed' : 'declined'}`}>
+                  <div className="guest-info">
+                    <div>
+                      <h4>{guest.name}</h4>
+                      {guest.plusOne && <p>+ {guest.plusOne}</p>}
+                    </div>
+                    <p>{guest.email}</p>
+                  </div>
+
+                  <div className="guest-actions">
+                <span className={`status ${guest.confirmed ? 'confirmed' : 'declined'}`}>
+                  {guest.confirmed ? 'Tak ✅' : 'Nie ❌'}
+                </span>
+                    <button onClick={() => handleEdit(guest)}>Edytuj</button>
+                    <button onClick={() => handleDelete(guest.id)}>Usuń</button>
+                  </div>
+                </div>
+            ))}
+          </div>
         </div>
       </div>
-    </div>
   );
 };
 
